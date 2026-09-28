@@ -78,10 +78,11 @@
     <button id="close-photo-modal-btn" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-amber-200 z-10"><i class="fas fa-times"></i></button>
     <div class="rounded-2xl overflow-hidden border border-amber-400/30 mb-3 max-h-[60vh]">
       <img id="focused-photo-img" src="" alt="Recuerdo" class="w-full h-auto object-contain bg-black/50" />
-    </div>
-    <p id="focused-photo-caption" class="font-serif-title text-amber-200 text-sm italic"></p>
-    <button id="back-to-galaxy-btn" class="mt-4 glass-card py-2 px-6 rounded-full text-xs font-medium text-amber-300 hover:text-white">Volver a la Galaxia 🌌</button>
-  </div>
+<div class="mt-4 flex items-center justify-center gap-2">
+  <button id="prev-photo-btn" class="glass-card w-10 h-10 rounded-full text-amber-300 hover:text-white" title="Anterior"><i class="fas fa-chevron-left"></i></button>
+  <button id="back-to-galaxy-btn" class="glass-card py-2 px-5 rounded-full text-xs font-medium text-amber-300 hover:text-white">Volver a la Galaxia 🌌</button>
+  <button id="next-photo-btn" class="glass-card w-10 h-10 rounded-full text-amber-300 hover:text-white" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
+</div>
 </div>
 
 <script>
@@ -169,6 +170,7 @@ function setMusic(on){
 
 /* ==================== 3D ==================== */
 let scene, camera, renderer, raycaster, mouse, mainGalaxyGroup, photoFrameGroup, cakeGroup, particlesGroup;
+ let dragMoved = false, dragStart = {x:0,y:0};
 let candleFlames = [], photoMeshList = [], focusedMesh = null, cardDismissed = false;
 let targetCameraPos = {x:0,y:6,z:18}, targetLook = {x:0,y:0,z:0};
 const currentLookAt = new THREE.Vector3();
@@ -275,11 +277,27 @@ function showCard(){ if (cardDismissed) return; document.getElementById('center-
 function burst(){ confetti({particleCount:80, spread:100, origin:{y:.6}, colors:['#ffd700','#ff007f','#ffffff','#00e5ff']}); }
 
 function focusPhoto(mesh){
+ 
   focusedMesh = mesh;
   const w = new THREE.Vector3(); mesh.getWorldPosition(w);
   targetCameraPos = {x:w.x*1.35, y:w.y+.2, z:w.z*1.35}; targetLook = {x:w.x, y:w.y, z:w.z};
   hideCard();
-  setTimeout(() => { document.getElementById('focused-photo-img').src = mesh.userData.url; toggleModal('photo-focus-modal', true); }, 600);
+  setTimeout(() => {
+    document.getElementById('focused-photo-img').src = mesh.userData.url;
+    const caps = CONFIG.photoCaptions || [];
+    document.getElementById('focused-photo-caption').innerText = caps[mesh.userData.id] || CONFIG.photoCaption || '';
+    toggleModal('photo-focus-modal', true);
+  }, 600);
+}
+function goPhoto(d){
+  if (!focusedMesh || !photoMeshList.length) return;
+  const n = CONFIG.photoUrls.length; let id = focusedMesh.userData.id;
+  for (let k = 0; k < n; k++){
+    id = (id + d + n) % n;
+    const m = photoMeshList.find(x => x.userData.id === id);
+    if (m){ focusPhoto(m); return; }
+  }
+}
 }
 function resetFocus(){
   focusedMesh = null; targetCameraPos = {x:0,y:6,z:18}; targetLook = {x:0,y:0,z:0};
@@ -288,14 +306,17 @@ function resetFocus(){
 
 function handlers(){
   const canvas = document.getElementById('webgl-canvas');
-  addEventListener('mousedown', e => { if (e.target.tagName!=='CANVAS') return; isDragging=true; prev={x:e.clientX,y:e.clientY}; });
+  addEventListener('mousedown', e => { if (e.target.tagName!=='CANVAS') return; isDragging=true; dragMoved=false; dragStart={x:e.clientX,y:e.clientY}; prev={x:e.clientX,y:e.clientY}; });
   addEventListener('mousemove', e => {
     mouse.x = e.clientX/innerWidth*2-1; mouse.y = -(e.clientY/innerHeight)*2+1;
     if (!isDragging) return;
+if (Math.abs(e.clientX-dragStart.x)+Math.abs(e.clientY-dragStart.y) > 6) dragMoved = true;
     rotY += (e.clientX-prev.x)*.005; rotX += (e.clientY-prev.y)*.005;
     rotX = Math.max(-Math.PI/4, Math.min(Math.PI/4, rotX)); prev = {x:e.clientX,y:e.clientY}; });
   addEventListener('mouseup', () => isDragging=false);
-  canvas.addEventListener('click', () => {
+  canvas.addEventListener('click', e => {
+    if (dragMoved) return;
+    mouse.x = e.clientX/innerWidth*2-1; mouse.y = -(e.clientY/innerHeight)*2+1;
     raycaster.setFromCamera(mouse, camera);
     const hit = raycaster.intersectObjects(photoMeshList);
     if (hit.length) focusPhoto(hit[0].object); });
@@ -308,6 +329,8 @@ function handlers(){
   document.getElementById('make-wish-btn').addEventListener('click', () => { toggleModal('wish-modal', false); burst(); burst(); });
   document.getElementById('close-photo-modal-btn').addEventListener('click', resetFocus);
   document.getElementById('back-to-galaxy-btn').addEventListener('click', resetFocus);
+  document.getElementById('prev-photo-btn').addEventListener('click', () => goPhoto(-1));
+  document.getElementById('next-photo-btn').addEventListener('click', () => goPhoto(1));
   document.getElementById('reset-cam-btn').addEventListener('click', resetFocus);
   document.getElementById('confetti-btn').addEventListener('click', burst);
   document.getElementById('bgm-toggle-btn').addEventListener('click', () => setMusic(!musicOn));
