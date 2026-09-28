@@ -44,7 +44,6 @@
     </div>
   </header>
 
-  <!-- Letrero inicial (compacto). Desaparece al pulsar el botón -->
   <main class="w-full flex justify-center items-center my-auto">
     <div id="center-card" class="glass-card rounded-3xl p-5 max-w-xs w-full text-center animate-float transition-all duration-700 relative pointer-events-auto">
       <div class="text-3xl mb-2">🎉</div>
@@ -78,33 +77,36 @@
     <button id="close-photo-modal-btn" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-amber-200 z-10"><i class="fas fa-times"></i></button>
     <div class="rounded-2xl overflow-hidden border border-amber-400/30 mb-3 max-h-[60vh]">
       <img id="focused-photo-img" src="" alt="Recuerdo" class="w-full h-auto object-contain bg-black/50" />
-<div class="mt-4 flex items-center justify-center gap-2">
-  <button id="prev-photo-btn" class="glass-card w-10 h-10 rounded-full text-amber-300 hover:text-white" title="Anterior"><i class="fas fa-chevron-left"></i></button>
-  <button id="back-to-galaxy-btn" class="glass-card py-2 px-5 rounded-full text-xs font-medium text-amber-300 hover:text-white">Volver a la Galaxia 🌌</button>
-  <button id="next-photo-btn" class="glass-card w-10 h-10 rounded-full text-amber-300 hover:text-white" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
-</div>
+    </div>
+    <p id="focused-photo-caption" class="text-sm text-amber-100/90 font-light mb-2"></p>
+    <div class="mt-4 flex items-center justify-center gap-2">
+      <button id="prev-photo-btn" class="glass-card w-10 h-10 rounded-full text-amber-300 hover:text-white" title="Anterior"><i class="fas fa-chevron-left"></i></button>
+      <button id="back-to-galaxy-btn" class="glass-card py-2 px-5 rounded-full text-xs font-medium text-amber-300 hover:text-white">Volver a la Galaxia 🌌</button>
+      <button id="next-photo-btn" class="glass-card w-10 h-10 rounded-full text-amber-300 hover:text-white" title="Siguiente"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </div>
 </div>
 
 <script>
 /* ==================== CONFIGURACIÓN: EDITA AQUÍ ==================== */
 const CONFIG = {
-  title: "¡Feliz 3 Años!",                       // Título grande del letrero
-  name: "Para Natia",                              // Nombre debajo del título
-  message: "Un año más brillando juntos uno al lado de otro. ¡Que la alegría hemos pasado en este año mas estando juntos siempre!", // Mensaje del letrero
-  wishTitle: "Un Te Amo Te Llevas",                  // Título de la ventana del deseo
-  wishParagraphs: [                               // Párrafos de la ventana del deseo
+  title: "¡Feliz 3 Años!",
+  name: "Para Natia",
+  message: "Un año más brillando juntos uno al lado de otro. ¡Que la alegría hemos pasado en este año mas estando juntos siempre!",
+  wishTitle: "Un Te Amo Te Llevas",
+  wishParagraphs: [
     "Agradezco tenerte presente en mi vida, gracias por quererme asi como soy  siempre. Te aprecio mucho y estoy muy orgulloso de tu evolucion. TE AMO.",
     "Se que te seguire sacando las risas verdaderas que tanto me enamoran, momentos inolvidables,amor 24/7 y mucha luz tendremos para que nos envidien. Cuenta conmigo para todo.",
     "\"¡Gracias por todo a por otro año mas para llegar a un aniversario par, te amo!\""
   ],
   photoCaptions: [
-  "🌟 Primera foto juntos en un momento random 🌟",
-  "💖 Un viaje juntos siendo la nueva pareja y juntos por el destino 💖",
-  "✨ La foto donde se notan los cambios que hemos tenidos juntos✨",
-  "🎂 El mejor inicio de año de estos que has estado tu a mi lado 🎂",
-  "🥰 Duda que sean fuego las estrellas, duda que el sol se mueva, duda que la verdad sea mentira, pero no dudes jamás de que te amo 🥰"
-],
-  // FOTOS: rutas de tus imágenes (carpeta "fotos" junto al HTML) o links directos
+    "🌟 Primera foto juntos en un momento random 🌟",
+    "💖 Un viaje juntos siendo la nueva pareja y juntos por el destino 💖",
+    "✨ La foto donde se notan los cambios que hemos tenidos juntos✨",
+    "🎂 El mejor inicio de año de estos que has estado tu a mi lado 🎂",
+    "🥰 Duda que sean fuego las estrellas, duda que el sol se mueva, duda que la verdad sea mentira, pero no dudes jamás de que te amo 🥰"
+  ],
+  // GitHub distingue mayúsculas/minúsculas: el nombre debe ser idéntico al del archivo
   photoUrls: [
     "fotos/foto1.jpg",
     "fotos/foto2.jpg",
@@ -115,9 +117,7 @@ const CONFIG = {
 };
 
 /* ==================== MÚSICA ==================== */
-// Usa cancion.mp3 (tu archivo). Si no existe, suena una melodía 8-bit original.
 class ChiptuneSynth {
-  // Música 8-bit ORIGINAL (estilo videojuego retro). Se usa solo si no hay cancion.mp3
   constructor(){
     this.ctx = null; this.isPlaying = false; this.timer = null; this.i = 0; this.step = 0.24;
     this.melody = [69,72,76,72,74,72,69,0,  67,71,74,71,72,71,67,0,
@@ -170,7 +170,7 @@ function setMusic(on){
 
 /* ==================== 3D ==================== */
 let scene, camera, renderer, raycaster, mouse, mainGalaxyGroup, photoFrameGroup, cakeGroup, particlesGroup;
- let dragMoved = false, dragStart = {x:0,y:0};
+let dragMoved = false, dragStart = {x:0,y:0};
 let candleFlames = [], photoMeshList = [], focusedMesh = null, cardDismissed = false;
 let targetCameraPos = {x:0,y:6,z:18}, targetLook = {x:0,y:0,z:0};
 const currentLookAt = new THREE.Vector3();
@@ -183,7 +183,6 @@ function fillText(){
   document.getElementById('display-name').innerText = CONFIG.name;
   document.getElementById('display-message').innerText = CONFIG.message;
   document.getElementById('wish-title').innerText = CONFIG.wishTitle;
-  document.getElementById('focused-photo-caption').innerText = CONFIG.photoCaption;
   const w = document.getElementById('wish-modal-text');
   CONFIG.wishParagraphs.forEach(t => { const p=document.createElement('p'); p.innerText=t; w.appendChild(p); });
 }
@@ -227,7 +226,8 @@ function makeStars(){
   for (let i=0;i<n;i++){
     const r = Math.random()*16, br = ((i%4)/4)*Math.PI*2, sp = r*1.2;
     pos[i*3] = Math.cos(br+sp)*r + rnd(r); pos[i*3+1] = rnd(r); pos[i*3+2] = Math.sin(br+sp)*r + rnd(r);
-    const m = c1.clone().lerp(c2, r/16); col[i*3]=m.r; col[i*3+1]=m.g; col[i*3+2]=m.b; }
+    const m = c1.clone().lerp(c2, r/16); col[i*3]=m.r; col[i*3+1]=m.g; col[i*3+2]=m.b;
+  }
   g.setAttribute('position', new THREE.BufferAttribute(pos,3)); g.setAttribute('color', new THREE.BufferAttribute(col,3));
   mainGalaxyGroup.add(new THREE.Points(g, new THREE.PointsMaterial({size:.022,vertexColors:true,transparent:true,opacity:.85,blending:THREE.AdditiveBlending})));
   const k = 1000, g2 = new THREE.BufferGeometry(), p2 = new Float32Array(k*3);
@@ -277,7 +277,6 @@ function showCard(){ if (cardDismissed) return; document.getElementById('center-
 function burst(){ confetti({particleCount:80, spread:100, origin:{y:.6}, colors:['#ffd700','#ff007f','#ffffff','#00e5ff']}); }
 
 function focusPhoto(mesh){
- 
   focusedMesh = mesh;
   const w = new THREE.Vector3(); mesh.getWorldPosition(w);
   targetCameraPos = {x:w.x*1.35, y:w.y+.2, z:w.z*1.35}; targetLook = {x:w.x, y:w.y, z:w.z};
@@ -285,7 +284,7 @@ function focusPhoto(mesh){
   setTimeout(() => {
     document.getElementById('focused-photo-img').src = mesh.userData.url;
     const caps = CONFIG.photoCaptions || [];
-    document.getElementById('focused-photo-caption').innerText = caps[mesh.userData.id] || CONFIG.photoCaption || '';
+    document.getElementById('focused-photo-caption').innerText = caps[mesh.userData.id] || '';
     toggleModal('photo-focus-modal', true);
   }, 600);
 }
@@ -298,7 +297,6 @@ function goPhoto(d){
     if (m){ focusPhoto(m); return; }
   }
 }
-}
 function resetFocus(){
   focusedMesh = null; targetCameraPos = {x:0,y:6,z:18}; targetLook = {x:0,y:0,z:0};
   toggleModal('photo-focus-modal', false); showCard();
@@ -310,19 +308,20 @@ function handlers(){
   addEventListener('mousemove', e => {
     mouse.x = e.clientX/innerWidth*2-1; mouse.y = -(e.clientY/innerHeight)*2+1;
     if (!isDragging) return;
-if (Math.abs(e.clientX-dragStart.x)+Math.abs(e.clientY-dragStart.y) > 6) dragMoved = true;
+    if (Math.abs(e.clientX-dragStart.x)+Math.abs(e.clientY-dragStart.y) > 6) dragMoved = true;
     rotY += (e.clientX-prev.x)*.005; rotX += (e.clientY-prev.y)*.005;
-    rotX = Math.max(-Math.PI/4, Math.min(Math.PI/4, rotX)); prev = {x:e.clientX,y:e.clientY}; });
+    rotX = Math.max(-Math.PI/4, Math.min(Math.PI/4, rotX)); prev = {x:e.clientX,y:e.clientY};
+  });
   addEventListener('mouseup', () => isDragging=false);
   canvas.addEventListener('click', e => {
     if (dragMoved) return;
     mouse.x = e.clientX/innerWidth*2-1; mouse.y = -(e.clientY/innerHeight)*2+1;
     raycaster.setFromCamera(mouse, camera);
     const hit = raycaster.intersectObjects(photoMeshList);
-    if (hit.length) focusPhoto(hit[0].object); });
+    if (hit.length) focusPhoto(hit[0].object);
+  });
   addEventListener('resize', () => { camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
 
-  // Botón del letrero: el letrero desaparece y se ve el fondo
   document.getElementById('open-wish-btn').addEventListener('click', () => {
     cardDismissed = true; hideCard(); toggleModal('wish-modal', true); burst(); });
   document.getElementById('close-wish-btn').addEventListener('click', () => toggleModal('wish-modal', false));
