@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FELIZ 3 AÑOS 🎂✨</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  * { user-select: none; -webkit-user-select: none; }
+  body { margin:0; overflow:hidden; background:#05020a; font-family:'Montserrat',sans-serif; color:#fff; }
+  .font-serif-title { font-family:'Playfair Display',serif; }
+  .glass-card { background:rgba(20,12,35,.6); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,215,0,.35); box-shadow:0 8px 32px rgba(0,0,0,.6),0 0 25px rgba(255,180,0,.25); }
+  .glass-modal { background:rgba(12,8,22,.92); backdrop-filter:blur(20px); border:1px solid rgba(255,215,0,.4); box-shadow:0 0 60px rgba(255,215,0,.3); }
+  .btn-pink-gold { background:linear-gradient(135deg,#ff007f,#ff9900); color:#fff; box-shadow:0 0 20px rgba(255,0,127,.4); transition:all .3s; }
+  .btn-pink-gold:hover { transform:translateY(-2px) scale(1.03); }
+  @keyframes floatAnimation { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .animate-float { animation:floatAnimation 4.5s ease-in-out infinite; }
+  #webgl-canvas { position:absolute; top:0; left:0; width:100vw; height:100vh; z-index:0; }
+</style>
+</head>
+<body class="relative min-h-screen w-screen overflow-hidden">
+<canvas id="webgl-canvas"></canvas>
+
+<!-- Música: pon tu archivo como "cancion.mp3" junto a este HTML -->
+<audio id="bgm" src="musica/cancion.mp3" loop preload="auto"></audio>
+
+<div class="relative z-10 min-h-screen w-full flex flex-col justify-between p-4 md:p-8 pointer-events-none">
+  <header class="w-full flex justify-end items-center pointer-events-auto">
+    <div class="flex items-center space-x-2 md:space-x-3">
+      <button id="confetti-btn" title="Fuegos Artificiales" class="glass-card px-3 md:px-4 py-2 rounded-full flex items-center space-x-2 text-xs md:text-sm text-amber-300 hover:scale-105 transition-all">
+        <i class="fas fa-star text-yellow-300 animate-pulse"></i><span class="hidden sm:inline">¡Celebrar! 🎆</span>
+      </button>
+      <button id="bgm-toggle-btn" title="Música" class="glass-card w-10 h-10 rounded-full flex items-center justify-center text-amber-300 hover:scale-110 transition-all">
+        <i id="bgm-icon" class="fas fa-music text-sm"></i>
+      </button>
+      <button id="reset-cam-btn" title="Reiniciar Vista" class="glass-card w-10 h-10 rounded-full flex items-center justify-center text-amber-300 hover:scale-110 transition-all">
+        <i class="fas fa-compress text-sm"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Letrero inicial (compacto). Desaparece al pulsar el botón -->
+  <main class="w-full flex justify-center items-center my-auto">
+    <div id="center-card" class="glass-card rounded-3xl p-5 max-w-xs w-full text-center animate-float transition-all duration-700 relative pointer-events-auto">
+      <div class="text-3xl mb-2">🎉</div>
+      <h2 id="display-title" class="font-serif-title text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-yellow-300 to-amber-400 mb-1"></h2>
+      <h3 id="display-name" class="font-serif-title text-lg font-semibold text-pink-300 mb-2"></h3>
+      <p id="display-message" class="text-xs text-amber-100/90 leading-relaxed mb-4 font-light"></p>
+      <button id="open-wish-btn" class="btn-pink-gold py-2 px-6 rounded-full font-semibold text-xs tracking-wider uppercase">Ver Deseo Especial 🎁</button>
+    </div>
+  </main>
+
+  <footer class="w-full text-center text-xs text-amber-200/60 pb-2">
+    <p><i class="fas fa-hand-pointer mr-1 text-pink-400"></i> Haz clic en las fotos 3D para acercarte | Arrastra para rotar la galaxia</p>
+  </footer>
+</div>
+
+<!-- Modal del deseo -->
+<div id="wish-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-500">
+  <div class="glass-modal rounded-3xl p-6 md:p-8 max-w-lg w-full text-center relative">
+    <button id="close-wish-btn" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-amber-200"><i class="fas fa-times"></i></button>
+    <div class="text-4xl mb-3">💖💖</div>
+    <h3 id="wish-title" class="font-serif-title text-2xl md:text-3xl font-bold text-amber-300 mb-2"></h3>
+    <div class="h-0.5 w-16 bg-gradient-to-r from-transparent via-amber-400 to-transparent mx-auto mb-4"></div>
+    <div id="wish-modal-text" class="text-sm text-amber-100/90 leading-relaxed font-light space-y-3 mb-6 text-justify"></div>
+    <button id="make-wish-btn" class="btn-pink-gold py-3 px-8 rounded-full text-xs md:text-sm font-semibold uppercase tracking-wider w-full">¡Lanzar Fuegos Artificiales! 🎆</button>
+  </div>
+</div>
+
+<!-- Modal de foto -->
+<div id="photo-focus-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md opacity-0 pointer-events-none transition-all duration-500">
+  <div class="glass-modal rounded-3xl p-4 md:p-6 max-w-md w-full relative text-center">
+    <button id="close-photo-modal-btn" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-amber-200 z-10"><i class="fas fa-times"></i></button>
+    <div class="rounded-2xl overflow-hidden border border-amber-400/30 mb-3 max-h-[60vh]">
+      <img id="focused-photo-img" src="" alt="Recuerdo" class="w-full h-auto object-contain bg-black/50" />
+    </div>
+    <p id="focused-photo-caption" class="font-serif-title text-amber-200 text-sm italic"></p>
+    <button id="back-to-galaxy-btn" class="mt-4 glass-card py-2 px-6 rounded-full text-xs font-medium text-amber-300 hover:text-white">Volver a la Galaxia 🌌</button>
+  </div>
+</div>
+
+<script>
+/* ==================== CONFIGURACIÓN: EDITA AQUÍ ==================== */
+const CONFIG = {
+  title: "¡Feliz 3 Años!",                       // Título grande del letrero
+  name: "Para Natia",                              // Nombre debajo del título
+  message: "Un año más brillando juntos uno al lado de otro. ¡Que la alegría hemos pasado en este año mas estando juntos siempre!", // Mensaje del letrero
+  wishTitle: "Un Te Amo Te Llevas",                  // Título de la ventana del deseo
+  wishParagraphs: [                               // Párrafos de la ventana del deseo
+    "Agradezco tenerte presente en mi vida, gracias por quererme asi como soy  siempre. Te aprecio mucho y estoy muy orgulloso de tu evolucion. TE AMO.",
+    "Se que te seguire sacando las risas verdaderas que tanto me enamoran, momentos inolvidables,amor 24/7 y mucha luz tendremos para que nos envidien. Cuenta conmigo para todo.",
+    "\"¡Gracias por todo a por otro año mas para llegar a un aniversario par, te amo!\""
+  ],
+  photoCaption: "🌟 Recuerda que siempre estare contigo en las buenas y en las malas 🌟", // Texto bajo la foto ampliada
+  // FOTOS: rutas de tus imágenes (carpeta "fotos" junto al HTML) o links directos
+  photoUrls: [
+    "fotos/foto1.jpg",
+    "fotos/foto2.jpg",
+    "fotos/foto3.jpg",
+    "fotos/foto4.jpg",
+    "fotos/foto5.jpg"
+  ]
+};
+
+/* ==================== MÚSICA ==================== */
+// Usa cancion.mp3 (tu archivo). Si no existe, suena el "Happy Birthday" sintetizado.
+class BirthdayAudioSynth {
+  constructor(){ this.ctx=null; this.isPlaying=false; this.timer=null; this.i=0;
+    this.notes=[{f:261.63,d:.35},{f:261.63,d:.15},{f:293.66,d:.5},{f:261.63,d:.5},{f:349.23,d:.5},{f:329.63,d:.9},
+      {f:261.63,d:.35},{f:261.63,d:.15},{f:293.66,d:.5},{f:261.63,d:.5},{f:392,d:.5},{f:349.23,d:.9},
+      {f:261.63,d:.35},{f:261.63,d:.15},{f:523.25,d:.5},{f:440,d:.5},{f:349.23,d:.5},{f:329.63,d:.5},{f:293.66,d:.5},
+      {f:466.16,d:.35},{f:466.16,d:.15},{f:440,d:.5},{f:349.23,d:.5},{f:392,d:.5},{f:349.23,d:.9}]; }
+  tone(f,d){ const c=this.ctx,o=c.createOscillator(),g=c.createGain(); o.type='triangle'; o.frequency.value=f;
+    g.gain.setValueAtTime(.15,c.currentTime); g.gain.exponentialRampToValueAtTime(.001,c.currentTime+d-.05);
+    o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d); }
+  start(){ this.ctx=this.ctx||new (window.AudioContext||window.webkitAudioContext)(); this.ctx.resume();
+    this.isPlaying=true; this.i=0; this.loop(); }
+  loop(){ if(!this.isPlaying) return; const n=this.notes[this.i]; this.tone(n.f,n.d); this.i=(this.i+1)%this.notes.length;
+    this.timer=setTimeout(()=>this.loop(),n.d*1000+80); }
+  stop(){ this.isPlaying=false; clearTimeout(this.timer); }
+}
+const synth = new BirthdayAudioSynth();
+const bgm = document.getElementById('bgm');
+let musicOn = false, fileOk = true;
+bgm.addEventListener('error', () => { fileOk = false; });
+
+function setMusic(on){
+  musicOn = on;
+  const icon = document.getElementById('bgm-icon');
+  icon.className = on ? "fas fa-volume-high text-pink-400 animate-pulse" : "fas fa-music text-amber-300";
+  if (on) {
+    bgm.play().catch(() => { fileOk = false; synth.start(); });
+    if (!fileOk) synth.start();
+  } else { bgm.pause(); synth.stop(); }
+}
+
+/* ==================== 3D ==================== */
+let scene, camera, renderer, raycaster, mouse, mainGalaxyGroup, photoFrameGroup, cakeGroup, particlesGroup;
+let candleFlames = [], photoMeshList = [], focusedMesh = null, cardDismissed = false;
+let targetCameraPos = {x:0,y:6,z:18}, targetLook = {x:0,y:0,z:0};
+const currentLookAt = new THREE.Vector3();
+let isDragging = false, prev = {x:0,y:0}, rotY = 0, rotX = 0.2;
+
+window.addEventListener('load', () => { fillText(); init3D(); makeCake(); makeStars(); makePhotos(); handlers(); animate(); });
+
+function fillText(){
+  document.getElementById('display-title').innerText = CONFIG.title;
+  document.getElementById('display-name').innerText = CONFIG.name;
+  document.getElementById('display-message').innerText = CONFIG.message;
+  document.getElementById('wish-title').innerText = CONFIG.wishTitle;
+  document.getElementById('focused-photo-caption').innerText = CONFIG.photoCaption;
+  const w = document.getElementById('wish-modal-text');
+  CONFIG.wishParagraphs.forEach(t => { const p=document.createElement('p'); p.innerText=t; w.appendChild(p); });
+}
+
+function init3D(){
+  scene = new THREE.Scene(); scene.fog = new THREE.FogExp2(0x05020a, .025);
+  camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, .1, 100);
+  camera.position.set(targetCameraPos.x, targetCameraPos.y, targetCameraPos.z);
+  renderer = new THREE.WebGLRenderer({canvas:document.getElementById('webgl-canvas'), antialias:true});
+  renderer.setSize(innerWidth, innerHeight); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
+  raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+  scene.add(new THREE.AmbientLight(0xfff0dd, 1.2));
+  const a = new THREE.PointLight(0xffa500,4,25); a.position.set(0,1,0); scene.add(a);
+  const b = new THREE.PointLight(0xff007f,3,30); b.position.set(-8,5,5); scene.add(b);
+  mainGalaxyGroup = new THREE.Group(); scene.add(mainGalaxyGroup);
+  photoFrameGroup = new THREE.Group(); mainGalaxyGroup.add(photoFrameGroup);
+}
+
+function makeCake(){
+  cakeGroup = new THREE.Group();
+  const shape = new THREE.Shape(), pts = 5, R = 2.4, r = 1.0;
+  for (let i = 0; i < pts*2; i++){
+    const ang = Math.PI/2 + i*Math.PI/pts, rad = i%2 ? r : R;
+    const x = Math.cos(ang)*rad, y = Math.sin(ang)*rad;
+    i ? shape.lineTo(x,y) : shape.moveTo(x,y);
+  }
+  shape.closePath();
+  const geo = new THREE.ExtrudeGeometry(shape, {depth:.7, bevelEnabled:true, bevelThickness:.15, bevelSize:.12, bevelSegments:3});
+  geo.center();
+  const star = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({color:0xffd700, emissive:0xff9900, emissiveIntensity:.6, metalness:.6, roughness:.25}));
+  cakeGroup.add(star);
+  const glow = new THREE.PointLight(0xffcc33, 5, 14); cakeGroup.add(glow);
+  mainGalaxyGroup.add(cakeGroup);
+}
+
+function makeStars(){
+  const n = 14000, g = new THREE.BufferGeometry(), pos = new Float32Array(n*3), col = new Float32Array(n*3);
+  const c1 = new THREE.Color(0xffd700), c2 = new THREE.Color(0xff007f);
+  const rnd = r => Math.pow(Math.random(),3)*(Math.random()<.5?1:-1)*.6*r;
+  for (let i=0;i<n;i++){
+    const r = Math.random()*16, br = ((i%4)/4)*Math.PI*2, sp = r*1.2;
+    pos[i*3] = Math.cos(br+sp)*r + rnd(r); pos[i*3+1] = rnd(r); pos[i*3+2] = Math.sin(br+sp)*r + rnd(r);
+    const m = c1.clone().lerp(c2, r/16); col[i*3]=m.r; col[i*3+1]=m.g; col[i*3+2]=m.b; }
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3)); g.setAttribute('color', new THREE.BufferAttribute(col,3));
+  mainGalaxyGroup.add(new THREE.Points(g, new THREE.PointsMaterial({size:.022,vertexColors:true,transparent:true,opacity:.85,blending:THREE.AdditiveBlending})));
+  const k = 1000, g2 = new THREE.BufferGeometry(), p2 = new Float32Array(k*3);
+  for (let i=0;i<k;i++){ const r=2.5+Math.random()*12, t=Math.random()*Math.PI*2, ph=(Math.random()-.5)*1.2;
+    p2[i*3]=r*Math.cos(t); p2[i*3+1]=ph*r; p2[i*3+2]=r*Math.sin(t); }
+  g2.setAttribute('position', new THREE.BufferAttribute(p2,3));
+  particlesGroup = new THREE.Points(g2, new THREE.PointsMaterial({size:.06,color:0xffe600,transparent:true,opacity:.6,blending:THREE.AdditiveBlending}));
+  mainGalaxyGroup.add(particlesGroup);
+}
+
+function loadTex(url, cb){
+  const u = url.trim(), m = u.match(/^(.*)(\.[^./]+)$/), base = m ? m[1] : u;
+  const list = [u, ...['.jpg','.jpeg','.png','.webp','.JPG','.JPEG','.PNG'].map(e => base+e)].filter((x,i,a) => a.indexOf(x)===i);
+  const loader = new THREE.TextureLoader();
+  (function next(i){
+    if (i >= list.length){ console.warn('No se encontró la foto:', u); return; }
+    loader.load(list[i], t => cb(t, list[i]), undefined, () => next(i+1));
+  })(0);
+}
+
+function makePhotos(){
+  const geo = new THREE.BoxGeometry(2.2,2.2,.1);
+  CONFIG.photoUrls.forEach((url, idx) => {
+    loadTex(url, (tex, realUrl) => {
+      const side = new THREE.MeshStandardMaterial({color:0xffd700,metalness:.8,roughness:.2});
+      const front = new THREE.MeshBasicMaterial({map:tex});
+      const mesh = new THREE.Mesh(geo, [side,side,side,side,front,front]);
+      const ar = tex.image.width / tex.image.height;
+      if (ar >= 1) mesh.scale.y = 1/Math.min(ar,1.6); else mesh.scale.x = Math.max(ar,.6);
+      const radius = 5.5 + (idx%2)*2.2, angle = idx/CONFIG.photoUrls.length*Math.PI*2;
+      mesh.position.set(Math.cos(angle)*radius, Math.sin(idx*1.5)*1.2, Math.sin(angle)*radius);
+      mesh.userData = {id:idx, url:realUrl, angle, radius, speed:.003+Math.random()*.002};
+      mesh.lookAt(0,0,0); photoFrameGroup.add(mesh); photoMeshList.push(mesh);
+    });
+  });
+}
+
+function toggleModal(id, show){
+  const m = document.getElementById(id);
+  m.classList.toggle('opacity-0', !show); m.classList.toggle('pointer-events-none', !show);
+}
+function hideCard(){ const c=document.getElementById('center-card'); c.classList.add('opacity-0','pointer-events-none'); }
+function showCard(){ if (cardDismissed) return; document.getElementById('center-card').classList.remove('opacity-0','pointer-events-none'); }
+function burst(){ confetti({particleCount:80, spread:100, origin:{y:.6}, colors:['#ffd700','#ff007f','#ffffff','#00e5ff']}); }
+
+function focusPhoto(mesh){
+  focusedMesh = mesh;
+  const w = new THREE.Vector3(); mesh.getWorldPosition(w);
+  targetCameraPos = {x:w.x*1.35, y:w.y+.2, z:w.z*1.35}; targetLook = {x:w.x, y:w.y, z:w.z};
+  hideCard();
+  setTimeout(() => { document.getElementById('focused-photo-img').src = mesh.userData.url; toggleModal('photo-focus-modal', true); }, 600);
+}
+function resetFocus(){
+  focusedMesh = null; targetCameraPos = {x:0,y:6,z:18}; targetLook = {x:0,y:0,z:0};
+  toggleModal('photo-focus-modal', false); showCard();
+}
+
+function handlers(){
+  const canvas = document.getElementById('webgl-canvas');
+  addEventListener('mousedown', e => { if (e.target.tagName!=='CANVAS') return; isDragging=true; prev={x:e.clientX,y:e.clientY}; });
+  addEventListener('mousemove', e => {
+    mouse.x = e.clientX/innerWidth*2-1; mouse.y = -(e.clientY/innerHeight)*2+1;
+    if (!isDragging) return;
+    rotY += (e.clientX-prev.x)*.005; rotX += (e.clientY-prev.y)*.005;
+    rotX = Math.max(-Math.PI/4, Math.min(Math.PI/4, rotX)); prev = {x:e.clientX,y:e.clientY}; });
+  addEventListener('mouseup', () => isDragging=false);
+  canvas.addEventListener('click', () => {
+    raycaster.setFromCamera(mouse, camera);
+    const hit = raycaster.intersectObjects(photoMeshList);
+    if (hit.length) focusPhoto(hit[0].object); });
+  addEventListener('resize', () => { camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+  // Botón del letrero: el letrero desaparece y se ve el fondo
+  document.getElementById('open-wish-btn').addEventListener('click', () => {
+    cardDismissed = true; hideCard(); toggleModal('wish-modal', true); burst(); });
+  document.getElementById('close-wish-btn').addEventListener('click', () => toggleModal('wish-modal', false));
+  document.getElementById('make-wish-btn').addEventListener('click', () => { toggleModal('wish-modal', false); burst(); burst(); });
+  document.getElementById('close-photo-modal-btn').addEventListener('click', resetFocus);
+  document.getElementById('back-to-galaxy-btn').addEventListener('click', resetFocus);
+  document.getElementById('reset-cam-btn').addEventListener('click', resetFocus);
+  document.getElementById('confetti-btn').addEventListener('click', burst);
+  document.getElementById('bgm-toggle-btn').addEventListener('click', () => setMusic(!musicOn));
+}
+
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  ['x','y','z'].forEach(k => {
+    camera.position[k] += (targetCameraPos[k]-camera.position[k])*.05;
+    currentLookAt[k] += (targetLook[k]-currentLookAt[k])*.05; });
+  camera.lookAt(currentLookAt);
+  if (!focusedMesh){ mainGalaxyGroup.rotation.y = rotY + t*.08; mainGalaxyGroup.rotation.x = rotX; }
+  cakeGroup.rotation.y = t*.6; const p = 1+Math.sin(t*2)*.06; cakeGroup.scale.set(p,p,p);
+  candleFlames.forEach((f,i) => { const s = 1+Math.sin(t*8+i)*.15; f.scale.set(s,s,s); });
+  photoMeshList.forEach(m => { if (m===focusedMesh) return;
+    m.userData.angle += m.userData.speed;
+    m.position.x = Math.cos(m.userData.angle)*m.userData.radius;
+    m.position.z = Math.sin(m.userData.angle)*m.userData.radius;
+    m.position.y += Math.sin(t*2+m.userData.id)*.002; m.lookAt(0,0,0); });
+  if (particlesGroup) particlesGroup.rotation.y = -t*.05;
+  renderer.render(scene, camera);
+}
+</script>
+</body>
+</html>
